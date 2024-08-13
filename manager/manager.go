@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 )
 
 type Event struct {
@@ -19,10 +20,8 @@ func main() {
 
 	events := loadJson()
 
-	fmt.Printf("Description: %s\n", events[0].Description)
-
 	for {
-		// /fmt.Print("\033[H\033[2J")
+		fmt.Print("\033[H\033[2J")
 		showMenu()
 		var input int
 		fmt.Scanln(&input)
@@ -33,7 +32,7 @@ func main() {
 		} else if input == 3 {
 			fmt.Println("Delete event")
 		} else if input == 4 {
-			fmt.Println("View event")
+			viewEvents(events)
 		} else if input == 5 {
 			fmt.Println("Closing")
 			break
@@ -51,9 +50,43 @@ func showMenu() {
 	fmt.Println("5. Quit")
 }
 
+func filterEvents(events []Event, month int) []Event {
+	filteredEvents := []Event{}
+	for _, event := range events {
+		if event.Date[5:7] == fmt.Sprintf("%02d", month) {
+			filteredEvents = append(filteredEvents, event)
+		}
+	}
+	// order the events by day
+	sort.Slice(filteredEvents, func(i, j int) bool {
+		return filteredEvents[i].Date < filteredEvents[j].Date
+	})
+	return filteredEvents
+}
+
+func viewEvents(events []Event) {
+
+	fmt.Print("Month ? ")
+	var month int
+	fmt.Scanln(&month)
+
+	events = filterEvents(events, month)
+
+	fmt.Println()
+	fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
+	fmt.Println("=======================================================================================================")
+
+	for _, event := range events {
+		fmt.Printf("%-5d %-40s %-15s %-15s %-30s\n", event.Id, event.Description, event.Date, event.Type, event.Location)
+	}
+	fmt.Println("=======================================================================================================")
+
+	fmt.Scanln()
+}
+
 func loadJson() []Event {
 	// read the json file from repo url
-	url := "https://github.com/stuartstein777/calendar/blob/main/events.json"
+	url := "https://stuartstein777.github.io/calendar/events.json"
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -62,6 +95,7 @@ func loadJson() []Event {
 	defer resp.Body.Close()
 
 	event := []Event{}
+
 	json.NewDecoder(resp.Body).Decode(&event)
 	return event
 
