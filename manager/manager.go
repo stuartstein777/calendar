@@ -34,7 +34,7 @@ func main() {
 		} else if input == 4 {
 			viewEvents(events)
 		} else if input == 5 {
-			fmt.Println("Closing")
+			fmt.Print("\033[H\033[2J")
 			break
 		} else {
 			fmt.Println("Invalid option")
@@ -65,23 +65,31 @@ func filterEvents(events []Event, month int) []Event {
 }
 
 func viewEvents(events []Event) {
+	for {
+		fmt.Print("\033[H\033[2J")
+		fmt.Print("Month ? ")
+		var month int
+		fmt.Scanln(&month)
 
-	fmt.Print("Month ? ")
-	var month int
-	fmt.Scanln(&month)
+		filteredEvents := filterEvents(events, month)
 
-	events = filterEvents(events, month)
+		fmt.Println()
+		fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
+		fmt.Println("=======================================================================================================")
 
-	fmt.Println()
-	fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
-	fmt.Println("=======================================================================================================")
+		for _, event := range filteredEvents {
+			fmt.Printf("%-5d %-40s %-15s %-15s %-30s\n", event.Id, event.Description, event.Date, event.Type, event.Location)
+		}
+		fmt.Println("=======================================================================================================")
 
-	for _, event := range events {
-		fmt.Printf("%-5d %-40s %-15s %-15s %-30s\n", event.Id, event.Description, event.Date, event.Type, event.Location)
+		fmt.Printf("b to go back to main menu: ")
+		var input string
+		fmt.Scanln(&input)
+
+		if input == "b" {
+			break
+		}
 	}
-	fmt.Println("=======================================================================================================")
-
-	fmt.Scanln()
 }
 
 func loadJson() []Event {
@@ -98,5 +106,4 @@ func loadJson() []Event {
 
 	json.NewDecoder(resp.Body).Decode(&event)
 	return event
-
 }
