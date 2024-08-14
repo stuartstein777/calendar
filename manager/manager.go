@@ -1,9 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"os"
 	"sort"
 )
 
@@ -18,15 +19,18 @@ type Event struct {
 func main() {
 	fmt.Println("Calendar manager")
 
-	events := loadJson()
+	config := loadConfig()
+
+	events := loadJson(config.EventsLocation)
 
 	for {
-		fmt.Print("\033[H\033[2J")
 		showMenu()
 		var input int
 		fmt.Scanln(&input)
 		if input == 1 {
-			fmt.Println("Add event")
+			events = addEvent(events)
+			saveEvents(config.EventsLocation, events)
+			publish(config.RepoRoot)
 		} else if input == 2 {
 			fmt.Println("Edit event")
 		} else if input == 3 {
@@ -43,11 +47,50 @@ func main() {
 }
 
 func showMenu() {
+	fmt.Print("\033[H\033[2J")
 	fmt.Println("1. Add event")
 	fmt.Println("2. Edit event")
 	fmt.Println("3. Delete event")
 	fmt.Println("4. View event")
 	fmt.Println("5. Quit")
+}
+
+func addEvent(events []Event) []Event {
+	reader := bufio.NewReader(os.Stdin)
+	event := Event{}
+
+	fmt.Print("Description: ")
+	event.Description, _ = reader.ReadString('\n')
+	event.Description = event.Description[:len(event.Description)-1]
+
+	fmt.Print("Date: ")
+	event.Date, _ = reader.ReadString('\n')
+	event.Date = event.Date[:len(event.Date)-1]
+
+	fmt.Print("Type: ")
+	event.Type, _ = reader.ReadString('\n')
+	event.Type = event.Type[:len(event.Type)-1]
+
+	fmt.Print("Location: ")
+	event.Location, _ = reader.ReadString('\n')
+	event.Location = event.Location[:len(event.Location)-1]
+
+	if len(events) == 0 {
+		event.Id = 1
+	} else {
+		id := 0
+		for _, e := range events {
+			if e.Id > id {
+				id = e.Id
+			}
+		}
+		event.Id = id
+		fmt.Printf("%d\n", event.Id)
+	}
+
+	events = append(events, event)
+	fmt.Scanln()
+	return events
 }
 
 func filterEvents(events []Event, month int) []Event {
@@ -57,7 +100,6 @@ func filterEvents(events []Event, month int) []Event {
 			filteredEvents = append(filteredEvents, event)
 		}
 	}
-	// order the events by day
 	sort.Slice(filteredEvents, func(i, j int) bool {
 		return filteredEvents[i].Date < filteredEvents[j].Date
 	})
@@ -71,7 +113,18 @@ func viewEvents(events []Event) {
 		var month int
 		fmt.Scanln(&month)
 
-		filteredEvents := filterEvents(events, month)
+		filteredEvents := events
+
+		if month >= 0 && month <= 12 {
+			if month == 0 {
+				filteredEvents = events
+			} else {
+				filteredEvents = filterEvents(events, month)
+			}
+		} else {
+			fmt.Println("Invalid month")
+			continue
+		}
 
 		fmt.Println()
 		fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
@@ -82,7 +135,7 @@ func viewEvents(events []Event) {
 		}
 		fmt.Println("=======================================================================================================")
 
-		fmt.Printf("b to go back to main menu: ")
+		fmt.Printf("<b> for main menu: ")
 		var input string
 		fmt.Scanln(&input)
 
@@ -92,18 +145,32 @@ func viewEvents(events []Event) {
 	}
 }
 
-func loadJson() []Event {
-	// read the json file from repo url
-	url := "https://stuartstein777.github.io/calendar/events.json"
+func loadJson(path string) []Event {
 
-	resp, err := http.Get(url)
+	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println("Error reading the json file")
+		if err == os.ErrNotExist {
+			fmt.Printf("The events.json file does not exist. It should be in %s\n", path)
+		} else {
+			fmt.Printf("Error reading the events.json file: %v\n", err)
+		}
 	}
-	defer resp.Body.Close()
 
-	event := []Event{}
+	defer file.Close()
+	events := []Event{}
+	json.NewDecoder(file).Decode(&events)
 
-	json.NewDecoder(resp.Body).Decode(&event)
-	return event
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Date < events[j].Date
+	})
+	return events
+}
+
+func saveEvents(path string, events []Event) {
+	file, err := os.Create(path)
+	if err != nil {
+		fmt.Printf("Error creating the events.json file: %v\n", err)
+	}
+	defer file.Close()
+	json.NewEncoder(file).Encode(events)
 }
