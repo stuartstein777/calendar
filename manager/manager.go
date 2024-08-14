@@ -55,6 +55,10 @@ func showMenu() {
 	fmt.Println("5. Quit")
 }
 
+func deleteEvent(events []Event, id int) []Event {
+
+}
+
 func addEvent(events []Event) []Event {
 	reader := bufio.NewReader(os.Stdin)
 	event := Event{}
@@ -84,7 +88,7 @@ func addEvent(events []Event) []Event {
 				id = e.Id
 			}
 		}
-		event.Id = id
+		event.Id = id + 1
 		fmt.Printf("%d\n", event.Id)
 	}
 
