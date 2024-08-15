@@ -34,7 +34,9 @@ func main() {
 		} else if input == 2 {
 			fmt.Println("Edit event")
 		} else if input == 3 {
-			fmt.Println("Delete event")
+			events = deleteEvent(events)
+			saveEvents(config.EventsLocation, events)
+			publish(config.RepoRoot)
 		} else if input == 4 {
 			viewEvents(events)
 		} else if input == 5 {
@@ -55,8 +57,76 @@ func showMenu() {
 	fmt.Println("5. Quit")
 }
 
-func deleteEvent(events []Event, id int) []Event {
+func printEvents(events []Event) {
 
+	fmt.Println()
+	fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
+	fmt.Println("=======================================================================================================")
+
+	for _, event := range events {
+		printEvent(event)
+	}
+	fmt.Println("=======================================================================================================")
+}
+
+func findEvent(events []Event, id int) Event {
+	for _, event := range events {
+		if event.Id == id {
+			return event
+		}
+	}
+	return Event{}
+}
+
+func printEvent(event Event) {
+	fmt.Printf("%-5d %-40s %-15s %-15s %-30s\n", event.Id, event.Description, event.Date, event.Type, event.Location)
+}
+
+func removeEvent(events []Event, id int) []Event {
+	newEvents := []Event{}
+	for _, event := range events {
+		if event.Id != id {
+			newEvents = append(newEvents, event)
+		}
+	}
+	return newEvents
+}
+
+func deleteEvent(events []Event) []Event {
+	for {
+		fmt.Print("\033[H\033[2J")
+		fmt.Print("Month ?")
+
+		var month int
+		fmt.Scanln(&month)
+
+		filteredEvents := events
+
+		if month >= 0 && month <= 12 {
+			if month == 0 {
+				filteredEvents = events
+			} else {
+				filteredEvents = filterEvents(events, month)
+
+				printEvents(filteredEvents)
+
+				fmt.Printf("Id of the event to delete: ")
+				var id int
+				fmt.Scanln(&id)
+				printEvent(findEvent(filteredEvents, id))
+				fmt.Printf("Delete this event? (y/n): ")
+				var input string
+				fmt.Scanln(&input)
+				if input == "y" {
+					events = removeEvent(events, id)
+					return events
+				} else {
+					break
+				}
+			}
+		}
+	}
+	return events
 }
 
 func addEvent(events []Event) []Event {
@@ -130,14 +200,7 @@ func viewEvents(events []Event) {
 			continue
 		}
 
-		fmt.Println()
-		fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
-		fmt.Println("=======================================================================================================")
-
-		for _, event := range filteredEvents {
-			fmt.Printf("%-5d %-40s %-15s %-15s %-30s\n", event.Id, event.Description, event.Date, event.Type, event.Location)
-		}
-		fmt.Println("=======================================================================================================")
+		printEvents(filteredEvents)
 
 		fmt.Printf("<b> for main menu: ")
 		var input string
