@@ -33,6 +33,9 @@ func main() {
 			publish(config.RepoRoot)
 		} else if input == 2 {
 			fmt.Println("Edit event")
+			events = editEvent(events)
+			saveEvents(config.EventsLocation, events)
+			publish(config.RepoRoot)
 		} else if input == 3 {
 			events = deleteEvent(events)
 			saveEvents(config.EventsLocation, events)
@@ -90,6 +93,64 @@ func removeEvent(events []Event, id int) []Event {
 		}
 	}
 	return newEvents
+}
+
+func getInput() string {
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	return input[:len(input)-1]
+}
+
+func editEvent(events []Event) []Event {
+	for {
+		fmt.Print("\033[H\033[2J")
+		fmt.Print("Month ?")
+
+		var month int
+		fmt.Scanln(&month)
+
+		if month >= 0 && month <= 12 {
+			filteredEvents := filterEvents(events, month)
+			printEvents(filteredEvents)
+			fmt.Printf("Id of the event to delete: ")
+			var id int
+			fmt.Scanln(&id)
+			eventToEdit := findEvent(filteredEvents, id)
+
+			fmt.Printf("%-16s %s\n", "Description:", eventToEdit.Description)
+			fmt.Printf("%-17s", "New description:")
+			eventToEdit.Description = getInput()
+			fmt.Printf("%-16s %s\n", "Date:", eventToEdit.Date)
+			fmt.Printf("%-17s", "New Date:")
+			eventToEdit.Date = getInput()
+			fmt.Printf("%-16s %s\n", "Type:", eventToEdit.Type)
+			fmt.Printf("%-17s", "New Type:")
+			eventToEdit.Type = getInput()
+			fmt.Printf("%-16s %s\n", "Location:", eventToEdit.Location)
+			fmt.Printf("%-17s", "New Location:")
+			eventToEdit.Location = getInput()
+
+			fmt.Printf("New Event\n")
+			fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
+			printEvent(eventToEdit)
+			fmt.Printf("Save changes? (y/n): ")
+			var input string
+			fmt.Scanln(&input)
+			if input == "y" {
+				for i, event := range events {
+					if event.Id == id {
+						events[i] = eventToEdit
+						break
+					}
+				}
+				return events
+			} else {
+				break
+			}
+		}
+	}
+
+	return events
 }
 
 func deleteEvent(events []Event) []Event {
