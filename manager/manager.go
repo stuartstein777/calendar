@@ -10,16 +10,19 @@ import (
 
 type Event struct {
 	Id          int
+	Name        string
 	Description string
 	Date        string
 	Type        string
 	Location    string
 }
 
+var config = Config{}
+
 func main() {
 	fmt.Println("Calendar manager")
 
-	config := loadConfig()
+	config = loadConfig()
 
 	events := loadJson(config.EventsLocation)
 
@@ -34,12 +37,8 @@ func main() {
 		} else if input == 2 {
 			fmt.Println("Edit event")
 			events = editEvent(events)
-			saveEvents(config.EventsLocation, events)
-			publish(config.RepoRoot)
 		} else if input == 3 {
 			events = deleteEvent(events)
-			saveEvents(config.EventsLocation, events)
-			publish(config.RepoRoot)
 		} else if input == 4 {
 			viewEvents(events)
 		} else if input == 5 {
@@ -63,7 +62,7 @@ func showMenu() {
 func printEvents(events []Event) {
 
 	fmt.Println()
-	fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
+	fmt.Printf("%-5s %-20s %-40s %-15s %-15s %-30s\n", "Id", "Name", "Description", "Date", "Type", "Location")
 	fmt.Println("=======================================================================================================")
 
 	for _, event := range events {
@@ -82,7 +81,7 @@ func findEvent(events []Event, id int) Event {
 }
 
 func printEvent(event Event) {
-	fmt.Printf("%-5d %-40s %-15s %-15s %-30s\n", event.Id, event.Description, event.Date, event.Type, event.Location)
+	fmt.Printf("%-5d %-20s %-40s %-15s %-15s %-30s\n", event.Id, event.Name, event.Description, event.Date, event.Type, event.Location)
 }
 
 func removeEvent(events []Event, id int) []Event {
@@ -95,10 +94,14 @@ func removeEvent(events []Event, id int) []Event {
 	return newEvents
 }
 
-func getInput() string {
+func getInput(ifEmpty string) string {
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
-	return input[:len(input)-1]
+	trimmed := input[:len(input)-1]
+	if trimmed == "" {
+		return ifEmpty
+	}
+	return trimmed
 }
 
 func editEvent(events []Event) []Event {
@@ -117,21 +120,28 @@ func editEvent(events []Event) []Event {
 			fmt.Scanln(&id)
 			eventToEdit := findEvent(filteredEvents, id)
 
+			fmt.Printf("%-16s %s\n", "Name:", eventToEdit.Name)
+			fmt.Printf("%-17s", "New Name:")
+			eventToEdit.Name = getInput(eventToEdit.Name)
+
 			fmt.Printf("%-16s %s\n", "Description:", eventToEdit.Description)
 			fmt.Printf("%-17s", "New description:")
-			eventToEdit.Description = getInput()
+			eventToEdit.Description = getInput(eventToEdit.Description)
+
 			fmt.Printf("%-16s %s\n", "Date:", eventToEdit.Date)
 			fmt.Printf("%-17s", "New Date:")
-			eventToEdit.Date = getInput()
+			eventToEdit.Date = getInput(eventToEdit.Date)
+
 			fmt.Printf("%-16s %s\n", "Type:", eventToEdit.Type)
 			fmt.Printf("%-17s", "New Type:")
-			eventToEdit.Type = getInput()
+			eventToEdit.Type = getInput(eventToEdit.Type)
+
 			fmt.Printf("%-16s %s\n", "Location:", eventToEdit.Location)
 			fmt.Printf("%-17s", "New Location:")
-			eventToEdit.Location = getInput()
+			eventToEdit.Location = getInput(eventToEdit.Location)
 
 			fmt.Printf("New Event\n")
-			fmt.Printf("%-5s %-40s %-15s %-15s %-30s\n", "Id", "Description", "Date", "Type", "Location")
+			fmt.Printf("%-5s %-20s %-40s %-15s %-15s %-30s\n", "Id", "Name", "Description", "Date", "Type", "Location")
 			printEvent(eventToEdit)
 			fmt.Printf("Save changes? (y/n): ")
 			var input string
@@ -143,6 +153,10 @@ func editEvent(events []Event) []Event {
 						break
 					}
 				}
+				fmt.Printf("Saving changes\n")
+				saveEvents(config.EventsLocation, events)
+				fmt.Printf("Publishing\n")
+				publish(config.RepoRoot)
 				return events
 			} else {
 				break
@@ -180,6 +194,10 @@ func deleteEvent(events []Event) []Event {
 				fmt.Scanln(&input)
 				if input == "y" {
 					events = removeEvent(events, id)
+					fmt.Printf("Saving events")
+					saveEvents(config.EventsLocation, events)
+					fmt.Printf("Publishing\n")
+					publish(config.RepoRoot)
 					return events
 				} else {
 					break
@@ -193,6 +211,10 @@ func deleteEvent(events []Event) []Event {
 func addEvent(events []Event) []Event {
 	reader := bufio.NewReader(os.Stdin)
 	event := Event{}
+
+	fmt.Print("Name: ")
+	event.Name, _ = reader.ReadString('\n')
+	event.Name = event.Description[:len(event.Description)-1]
 
 	fmt.Print("Description: ")
 	event.Description, _ = reader.ReadString('\n')
