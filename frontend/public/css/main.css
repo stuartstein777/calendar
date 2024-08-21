@@ -1,0 +1,103 @@
+/*
+#8fbcbb
+#88c0d0
+#81a1c1
+#5e81ac
+
+#d8dee9
+#e5e9f0
+#eceff4
+
+#2e3440
+#3b4252
+#434c5e
+#4c566a
+
+#bf616a
+#d08770
+#ebcb8b
+#a3be8c
+#b48ead
+*/
+@media (min-width: 1200px) {
+    .container{
+        max-width: 1200px;
+    }
+}
+
+body {
+    background-color: #2e3440;
+    color: #d8dee9;
+}
+
+h1 {
+    color: #d8dee9;
+}
+
+.mr-5 {
+    margin-right: 5px;
+}
+
+.mr-6 {
+    margin-right: 6px;
+}
+
+.mr-7 {
+    margin-right: 7px;
+}
+
+.mr-9 {
+    margin-right: 9px;
+}
+
+.content {
+    text-align: center;
+    margin:10px;
+}
+
+.flex-container {
+    display: flex;
+    flex-wrap: nowrap;
+    margin: 0px;
+}
+
+.flex-container > div {
+    margin: 0px;
+    text-align: center;
+    line-height: 50px;
+    font-size: 20px;
+    padding: 0px;
+}
+
+.table {
+    color: #d8dee9;
+}
+
+.calendar-header,
+.calendar-header-month {
+    text-align: center;
+}
+
+.calendar-header {
+    font-size: 2em;
+}
+
+.calendar-header-month {
+    color: #d8dee9;
+    min-width: 350px;
+    display: inline-block;
+}
+
+.chevron-right,
+.chevron-left {
+    cursor: pointer
+ }
+
+.chevron-right {
+    padding-left: 30px;
+}
+
+.chevron-left {
+    padding-right: 30px;
+}
+
