@@ -4,14 +4,59 @@
             [re-frame.core :as rf]
             [exfn.subscriptions]
             [exfn.events]
-            ["moment" :as moment]))
+            [cljs-time.core :as time]
+            [cljs-time.format :as fmt]
+            ["moment" :as moment]
+            [clojure.string :as str]))
 
-(defn calendar-days [year month]
-  [[1 2 3 4 5 6 7]
-   [8 9 10 11 12 13 14]
-   [15 16 17 18 19 20 21]
-   [22 23 24 25 26 27 28]
-   [29 30 31]])
+(defn days-in-month [year month]
+  (let [last-day (time/last-day-of-the-month (time/date-time year month 1))]
+    (time/day last-day)))
+
+(defn first-day-of-week-for-month [year month]
+  (let [first-day-of-month (time/date-time year month 1)
+        day-of-week (time/day-of-week first-day-of-month)
+        days-to-subtract (mod (- day-of-week 1) 7)]
+    (time/minus first-day-of-month (time/days days-to-subtract))))
+
+(comment
+  
+  (defn pad-day [n]
+    (cond (= n 0) "  " 
+          (< n 10) (str " " n)
+          :else n))
+  
+  (let [year 2024
+        month 8
+        first-day (time/day-of-week (time/date-time year month 1))
+        days-in-month (days-in-month year month)
+        day-titles ["M" "T" "W" "T" "F" "S" "S"]
+        days (->> (concat
+                   (repeat (dec first-day) 0)
+                   (range 1 (inc days-in-month)))
+                  (partition-all 7))]
+    (println "" (str/join "   " day-titles))
+    (let [formatted-days (map #(map pad-day %) days)]
+      (doseq [row formatted-days]
+        (println (str/join "  " row)))))
+    )
+  
+  
+  ;; M - 1,
+  ;; T - 2,
+  ;; W - 3,
+  ;; T - 4,
+  ;; F - 5,
+  ;; S - 6,
+  ;; S - 7
+  ;; August 01 - 4 T
+  ;; September 01 - 7
+  ;; October 01 - 2
+  ;; April 01 - 1 M
+
+  #_(time/day-of-week (time/date-time 2024 8 1))
+
+  
 
 (defn month [month]
   (let [day-initials ["M" "T" "W" "T" "F" "S" "S"]]
@@ -26,26 +71,7 @@
                :background     "#f0f0f0"
                :border-bottom  "1px solid #ddd"}}
       (str "Test")
-      #_(for [day day-initials]
-        [:div.day-initial
-         {:style {:flex       "1"
-                  :text-align "center"
-                  :padding    "10px"}} day])]
-     #_[:div.day-numbers
-      {:style {:display        "flex"
-               :flex-direction "column"}}
-      (for [row (calendar-days 2024 8)]
-        [:div.week-row
-         {:style {:display "flex"
-                          :flex-direction "row"}}
-         (for [day row]
-           [:div.day-number
-            {:style {:flex "1"
-                     :text-align "center"
-                     :padding "10px"
-                     :border "1px solid #ddd"
-                     :box-sizing "border-box"
-                     :min-height "50px"}} day])])]]))
+      ]]))
 
 (defn format-date [date current-view]
   (case current-view
