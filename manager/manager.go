@@ -63,12 +63,12 @@ func printEvents(events []Event) {
 
 	fmt.Println()
 	fmt.Printf("%-5s %-20s %-40s %-15s %-15s %-30s\n", "Id", "Name", "Description", "Date", "Type", "Location")
-	fmt.Println("=======================================================================================================")
+	fmt.Println("=============================================================================================================")
 
 	for _, event := range events {
 		printEvent(event)
 	}
-	fmt.Println("=======================================================================================================")
+	fmt.Println("=============================================================================================================")
 }
 
 func findEvent(events []Event, id int) Event {
@@ -214,7 +214,7 @@ func addEvent(events []Event) []Event {
 
 	fmt.Print("Name: ")
 	event.Name, _ = reader.ReadString('\n')
-	event.Name = event.Description[:len(event.Description)-1]
+	event.Name = event.Name[:len(event.Name)-1]
 
 	fmt.Print("Description: ")
 	event.Description, _ = reader.ReadString('\n')

@@ -10,7 +10,8 @@
 (rf/reg-event-db
  :initialize
  (fn [_ _]
-   {:current-date (.startOf (moment) "month")}))
+   {:current-date (.startOf (moment) "month")
+    :current-view :month}))
 
 (rf/reg-event-db
  :next-month
@@ -25,3 +26,8 @@
    (-> db
        ;(update :x inc)
        (update :current-date #(-> % .clone (.subtract 1 "month"))))))
+
+(rf/reg-event-db
+ :update-view
+ (fn [db [_ view]]
+   (assoc db :current-view view)))

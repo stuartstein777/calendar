@@ -10,3 +10,8 @@
  :x
  (fn [db _]
    (-> db :x)))
+
+(rf/reg-sub
+  :current-view
+  (fn [db _]
+    (get-in db [:current-view])))

@@ -61,6 +61,10 @@ h1 {
     margin: 0px;
 }
 
+.ptr {
+    cursor: pointer;
+}
+
 .flex-container > div {
     margin: 0px;
     text-align: center;
@@ -87,11 +91,6 @@ h1 {
     min-width: 350px;
     display: inline-block;
 }
-
-.chevron-right,
-.chevron-left {
-    cursor: pointer
- }
 
 .chevron-right {
     padding-left: 30px;
