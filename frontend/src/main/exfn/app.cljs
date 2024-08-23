@@ -16,20 +16,26 @@
 (defn get-days-in-month [year month]
   (let [first-day (time/day-of-week (time/date-time year month 1))
         days-in-month (days-in-month year month)
-        to-pad-start (dec first-day)
-        to-pad-end (- 35 days-in-month to-pad-start)]
+        to-pad-end (- 42 (+ days-in-month first-day))]
     (->> (concat
-          (repeat to-pad-start 0)
+          (repeat (dec first-day) 0)
           (range 1 (inc days-in-month))
           (repeat to-pad-end 0))
          (partition-all 7))))
 
+(defn get-bottom-border [week weeks]
+  (when (= week (last weeks))
+    "1px solid #f3f3f3"))
+
+(get-days-in-month 2024 1)
+
 (defn month-component [year month]
-  (let [days (get-days-in-month year month)]
+  (let [weeks (get-days-in-month year month)] 
     [:div.calendar-month
      {:style {:display        "flex"
               :flex-direction "column"
               :padding-left   10
+              :padding-top    20
               :width          "fit-content"}}
      [:div
       {:style {:display "inline"
@@ -39,44 +45,54 @@
       {:style {:display        "flex"
                :flex-direction "row"
                :font-weight    "bold"
+               :font-size      "0.8em"
                :margin-top     "5px"
                :background     "#f0f0f0"
                :color          "#000000"
-               :border-bottom  "1px solid #ddd"}}
+               :border-bottom  "1px solid #f3f3f3"}}
       (for [day ["M" "T" "W" "T" "F" "S" "S"]]
         [:div {:style {:flex "1"
                        :text-align "center"}} day])]
-     (for [week days]
+     (for [week weeks]
        [:div.week
         {:style {:display        "flex"
                  :flex-direction "row"
-                 :border-bottom  "1px solid #ddd"}}
+                 :border-left  "1px solid #f3f3f3"
+                 :border-right  "1px solid #f3f3f3"
+                 :border-bottom  (get-bottom-border week weeks)}}
         (for [day week]
           [:div.day
            {:style {:flex "1"
-                    :border-left "1px solid #ddd"
-                    :min-width "50px"
-                    :max-width "50px"
-                    :border-right "1px solid #ddd"
-                    :border-top "1px solid #ddd"
+                    :min-width "40px"
+                    :max-width "40px"
+                    :min-height "25px"
+                    :max-height "25px"
+                    :font-weight "0.8em"
                     :text-align "center"
-                    :padding "5px"}}
+                    :padding "2px"}}
            (if (= 0 day)
-             ""
+                ""
              day)])])]))
 
 (defn display-year []
   (let [current-date @(rf/subscribe [:current-date])
-        ;current-year (time/year current-date)
-        ]
-    ;; layout a flex box grid 3x4 with a month-component for each month in the year
-    [:div.calendar-year
-     {:style {:display        "grid"
-              :grid-template-columns "repeat(4, 1fr)"
-              :grid-template-rows    "repeat(3, 1fr)"
-              :gap "10px"}}
-     (for [month (range 1 13)]
-       [month-component 2024 month])]))
+        current-year (js/Number (.format current-date "YYYY"))]
+    [:div
+     [:div.col.col-lg-10
+      [:div.calendar-year
+       {:style {:display        "grid"
+                :grid-template-columns "repeat(4, 1fr)"
+                :grid-template-rows    "repeat(3, 1fr)"
+                :gap "10px"}}
+       (for [month (range 1 13)]
+         [month-component current-year month])]]
+     [:div.col.col-lg-2
+      [:div.row
+       ]
+      [:div.row]
+      ;; display event-type color legend
+      ;; display this months events
+      ]]))
 
 (defn format-date [date current-view]
   (case current-view
@@ -91,14 +107,22 @@
      
      [:span.chevron-left                                   ;; left chevron <
       [:i.fas.fa-chevron-left.ptr
-       {:on-click #(rf/dispatch-sync [:prev-month])}]]
+       {:on-click 
+        (fn []
+           (if (= current-view :year)
+            (rf/dispatch-sync [:prev-year])
+            (rf/dispatch-sync [:prev-month])))}]]
      
      [:span.calendar-header-month                          ;; month
       (str (format-date current-date current-view))]
      
      [:span.chevron-right                                  ;; right chevron >
       [:i.fas.fa-chevron-right.ptr
-        {:on-click #(rf/dispatch-sync [:next-month])}]]
+        {:on-click 
+         (fn []
+           (if (= current-view :year)
+             (rf/dispatch-sync [:next-year])
+             (rf/dispatch-sync [:next-month])))}]]
      
      [:span
       {:style {:float "right"

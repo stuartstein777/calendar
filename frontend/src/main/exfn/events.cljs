@@ -28,6 +28,18 @@
        (update :current-date #(-> % .clone (.subtract 1 "month"))))))
 
 (rf/reg-event-db
+ :next-year
+ (fn [db _]
+   (-> db
+       (update :current-date #(-> % .clone (.add 1 "year"))))))
+
+(rf/reg-event-db
+ :prev-year
+ (fn [db _]
+   (-> db
+       (update :current-date #(-> % .clone (.subtract 1 "year"))))))
+
+(rf/reg-event-db
  :update-view
  (fn [db [_ view]]
    (assoc db :current-view view)))
