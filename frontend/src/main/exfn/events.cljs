@@ -38,14 +38,12 @@
  :next-month
  (fn [db _]
    (-> db
-       ;(update :x inc)
        (update :current-date #(-> % .clone (.add 1 "month"))))))
 
 (rf/reg-event-db
  :prev-month
  (fn [db _]
    (-> db
-       ;(update :x inc)
        (update :current-date #(-> % .clone (.subtract 1 "month"))))))
 
 (rf/reg-event-db

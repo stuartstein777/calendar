@@ -11,14 +11,14 @@
             [clojure.string :as str]))
 
 (def event-type-legend
-  {"Poker Night"    ["#317a28" :black]
-   "Night Out"      [:red      :black]
-   "Social"         [:yellow   :black]
-   "Pool"           [:blue     :white]
-   "Club"           [:orange   :black]
-   "Gig"            [:pink     :black]
-   "Climbing"       [:brown    :white]
-   "Hike"           [:magenta  :black]})
+  {"poker night"    ["#317a28" :black]
+   "night out"      [:red      :black]
+   "social"         [:yellow   :black]
+   "pool"           [:blue     :white]
+   "club"           [:orange   :black]
+   "gig"            [:pink     :black]
+   "climbing"       [:brown    :white]
+   "hike"           [:magenta  :black]})
 
 (defn days-in-month [year month]
   (let [last-day (time/last-day-of-the-month (time/date-time year month 1))]
@@ -42,7 +42,9 @@
   
   (if (empty? events)
     "#2e3440"
-    (get event-type-legend (first events))))
+    (get event-type-legend (str/lower-case (first events)))))
+
+;; on clicking day that has event, show a popup with the event details
 
 (defn month-component [year month]
   (let [weeks (get-days-in-month year month)
@@ -66,17 +68,22 @@
                :background     "#f0f0f0"
                :color          "#000000"
                :border-bottom  "1px solid #f3f3f3"}}
-      (for [day ["M" "T" "W" "T" "F" "S" "S"]]
+      (for [[day idx] (map vector ["M" "T" "W" "T" "F" "S" "S"] (range 7))]
+        ^{:key (str "idx-" idx "-DI-" day)}
         [:div {:style {:flex "1"
                        :text-align "center"}} day])]
      (for [week weeks]
+       
+       ^{:key (str "week-" week "-month-" month)}
        [:div.week
         {:style {:display        "flex"
                  :flex-direction "row"
                  :border-left  "1px solid #f3f3f3"
                  :border-right  "1px solid #f3f3f3"
                  :border-bottom  (get-bottom-border week weeks)}}
-        (for [day week]
+        
+        (for [[day idx] (map vector week (range 1 (count week)))]
+          ^{:key (str "idx-" idx "day-" day "-month-" month)}
           [:div.day
            {:style {:flex "1"
                     :min-width "40px"
@@ -131,6 +138,7 @@
                :grid-template-rows    "repeat(3, 1fr)"
                :gap                   "10px"}}
       (for [month (range 1 13)]
+        ^{:key (str "month-" month)}
         [month-component current-year month])]
      
      ;; display the legend and this months events
@@ -147,6 +155,7 @@
                 :flex-direction "column"}}
 
        (for [entry event-type-legend]
+         ^{:key (key entry)}
          [:div
           {:style {:flex "0 0 auto"
                    :gap  "0px"}}
@@ -161,7 +170,7 @@
                      :border-radius    "50%"
                      :margin-right     "10px"}}]
            [:div
-            (key entry)]]])]
+            (str/capitalize (key entry))]]])]
       
       ;; this months events
       [:div
@@ -171,6 +180,7 @@
                 :flex-direction "column"}}
        [:h4 (str (.format (moment) "MMMM") " events")]
       (for [event curent-month-events]
+        ^{:key (:id event)}
         [:div
          {:style {:display "flex"
                   :flex "0 0 auto"

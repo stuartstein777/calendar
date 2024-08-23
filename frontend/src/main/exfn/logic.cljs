@@ -17,7 +17,6 @@
   (let [result (->> events
                     (filter #(-> % :date (.isSame date "day")))
                     (mapv :type))]
-    (prn result)
     result))
 
 
