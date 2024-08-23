@@ -13,7 +13,7 @@
    4 "THU"
    5 "FRI"
    6 "SAT"
-   7 "SUN"})
+   0 "SUN"})
    
 (defn events-types-on-date [events date]
   (let [result (->> events
