@@ -28,6 +28,8 @@
 body {
     background-color: #2e3440;
     color: #d8dee9;
+    padding-left: 50px;
+    padding-right: 50px;
 }
 
 h1 {

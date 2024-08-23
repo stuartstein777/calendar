@@ -13,65 +13,70 @@
   (let [last-day (time/last-day-of-the-month (time/date-time year month 1))]
     (time/day last-day)))
 
-(defn first-day-of-week-for-month [year month]
-  (let [first-day-of-month (time/date-time year month 1)
-        day-of-week (time/day-of-week first-day-of-month)
-        days-to-subtract (mod (- day-of-week 1) 7)]
-    (time/minus first-day-of-month (time/days days-to-subtract))))
-
-(comment
-  
-  (defn pad-day [n]
-    (cond (= n 0) "  " 
-          (< n 10) (str " " n)
-          :else n))
-  
-  (let [year 2024
-        month 8
-        first-day (time/day-of-week (time/date-time year month 1))
+(defn get-days-in-month [year month]
+  (let [first-day (time/day-of-week (time/date-time year month 1))
         days-in-month (days-in-month year month)
-        day-titles ["M" "T" "W" "T" "F" "S" "S"]
-        days (->> (concat
-                   (repeat (dec first-day) 0)
-                   (range 1 (inc days-in-month)))
-                  (partition-all 7))]
-    (println "" (str/join "   " day-titles))
-    (let [formatted-days (map #(map pad-day %) days)]
-      (doseq [row formatted-days]
-        (println (str/join "  " row)))))
-    )
-  
-  
-  ;; M - 1,
-  ;; T - 2,
-  ;; W - 3,
-  ;; T - 4,
-  ;; F - 5,
-  ;; S - 6,
-  ;; S - 7
-  ;; August 01 - 4 T
-  ;; September 01 - 7
-  ;; October 01 - 2
-  ;; April 01 - 1 M
+        to-pad-start (dec first-day)
+        to-pad-end (- 35 days-in-month to-pad-start)]
+    (->> (concat
+          (repeat to-pad-start 0)
+          (range 1 (inc days-in-month))
+          (repeat to-pad-end 0))
+         (partition-all 7))))
 
-  #_(time/day-of-week (time/date-time 2024 8 1))
-
-  
-
-(defn month [month]
-  (let [day-initials ["M" "T" "W" "T" "F" "S" "S"]]
+(defn month-component [year month]
+  (let [days (get-days-in-month year month)]
     [:div.calendar-month
      {:style {:display        "flex"
               :flex-direction "column"
+              :padding-left   10
               :width          "fit-content"}}
+     [:div
+      {:style {:display "inline"
+               :text-align "center"}}
+      (str (fmt/unparse (fmt/formatter "MMMM") (time/date-time year month 1)))]
      [:div.day-initials
       {:style {:display        "flex"
                :flex-direction "row"
                :font-weight    "bold"
+               :margin-top     "5px"
                :background     "#f0f0f0"
+               :color          "#000000"
                :border-bottom  "1px solid #ddd"}}
-      (str "Test")
-      ]]))
+      (for [day ["M" "T" "W" "T" "F" "S" "S"]]
+        [:div {:style {:flex "1"
+                       :text-align "center"}} day])]
+     (for [week days]
+       [:div.week
+        {:style {:display        "flex"
+                 :flex-direction "row"
+                 :border-bottom  "1px solid #ddd"}}
+        (for [day week]
+          [:div.day
+           {:style {:flex "1"
+                    :border-left "1px solid #ddd"
+                    :min-width "50px"
+                    :max-width "50px"
+                    :border-right "1px solid #ddd"
+                    :border-top "1px solid #ddd"
+                    :text-align "center"
+                    :padding "5px"}}
+           (if (= 0 day)
+             ""
+             day)])])]))
+
+(defn display-year []
+  (let [current-date @(rf/subscribe [:current-date])
+        ;current-year (time/year current-date)
+        ]
+    ;; layout a flex box grid 3x4 with a month-component for each month in the year
+    [:div.calendar-year
+     {:style {:display        "grid"
+              :grid-template-columns "repeat(4, 1fr)"
+              :grid-template-rows    "repeat(3, 1fr)"
+              :gap "10px"}}
+     (for [month (range 1 13)]
+       [month-component 2024 month])]))
 
 (defn format-date [date current-view]
   (case current-view
@@ -96,7 +101,8 @@
         {:on-click #(rf/dispatch-sync [:next-month])}]]
      
      [:span
-      {:style {:float "right"}}
+      {:style {:float "right"
+               :padding-right 50}}
       [:i.fas.fa-list-alt.mr-9.ptr
        {:on-click #(rf/dispatch-sync [:update-view :list])}]
       [:i.fas.fa-calendar.mr-9.ptr
@@ -104,12 +110,15 @@
       [:i.fas.fa-calendar-alt.ptr
        {:on-click #(rf/dispatch-sync [:update-view :year])}]]]))
 
-(defn app
-  []
-  [:div.container
-   [calendar-header]
-   [:hr]
-   [month]])
+(defn app []
+  (let [current-view @(rf/subscribe [:current-view])]
+    [:div
+     {:style {:text-align :center}}
+     [calendar-header]
+     [:hr]
+     (if (= :year current-view)
+       [display-year]
+       [:div])]))
 
 (defn ^:dev/after-load start []
   (dom/render [app]
