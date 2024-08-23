@@ -1,0 +1,42 @@
+*
+{
+    margin:0;padding:0;
+}
+
+#content {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin:0 auto;
+}
+.box {
+    flex: 0 0 90px;
+    height: 90px;
+    margin: 5px;
+    background-color: blue;
+}
+
+@media (min-width: 200px) {
+  #content {
+    width: 200px;
+  }
+}
+@media (min-width: 300px) {
+  #content {
+    width: 300px;
+  }
+}
+@media (min-width: 400px) {
+  #content {
+    width: 400px;
+  }
+}
+@media (min-width: 500px) {
+  #content {
+    width: 500px;
+  }
+}
+@media (min-width: 600px) {
+  #content {
+    width: 600px;
+  }

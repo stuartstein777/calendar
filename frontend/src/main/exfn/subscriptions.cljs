@@ -15,3 +15,8 @@
   :current-view
   (fn [db _]
     (get-in db [:current-view])))
+
+(rf/reg-sub
+ :calendar-events
+ (fn [db _]
+   (-> db :calendar-events)))

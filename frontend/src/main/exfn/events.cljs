@@ -8,10 +8,22 @@
             [day8.re-frame.http-fx]))
 
 (rf/reg-event-db
+  :process-events
+  (fn [db [_ events]]
+    (-> db
+        (assoc :calendar-events events))))
+
+(rf/reg-event-fx
  :initialize
- (fn [_ _]
-   {:current-date (.startOf (moment) "month")
-    :current-view :month}))
+  (fn [{:keys [db]} [_ _]]
+   {:db   {:current-date (.startOf (moment) "month")
+           :current-view :month}
+    :http-xhrio {:method :get
+                 :uri    (str "https://stuartstein777.github.io/calendar/events.json")
+                 :format (ajax/json-request-format)
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :on-success      [:process-events]
+                 :on-failure      [:fail]}}))
 
 (rf/reg-event-db
  :next-month
@@ -43,3 +55,4 @@
  :update-view
  (fn [db [_ view]]
    (assoc db :current-view view)))
+

@@ -9,6 +9,16 @@
             ["moment" :as moment]
             [clojure.string :as str]))
 
+(def event-type-legend
+  {"Poker Night"    "#317a28"
+   "Night Out"      :red
+   "Social"         :yellow
+   "Pool"           :blue
+   "Club"           :orange
+   "Gig"            :pink
+   "Climbing"       :brown
+   "Hike"           :magenta})
+
 (defn days-in-month [year month]
   (let [last-day (time/last-day-of-the-month (time/date-time year month 1))]
     (time/day last-day)))
@@ -26,8 +36,6 @@
 (defn get-bottom-border [week weeks]
   (when (= week (last weeks))
     "1px solid #f3f3f3"))
-
-(get-days-in-month 2024 1)
 
 (defn month-component [year month]
   (let [weeks (get-days-in-month year month)] 
@@ -77,22 +85,65 @@
 (defn display-year []
   (let [current-date @(rf/subscribe [:current-date])
         current-year (js/Number (.format current-date "YYYY"))]
+    
+    ;; display the calendar month grids
+    
     [:div
-     [:div.col.col-lg-10
-      [:div.calendar-year
-       {:style {:display        "grid"
-                :grid-template-columns "repeat(4, 1fr)"
-                :grid-template-rows    "repeat(3, 1fr)"
-                :gap "10px"}}
-       (for [month (range 1 13)]
-         [month-component current-year month])]]
-     [:div.col.col-lg-2
-      [:div.row
+     {:style {:display               "flex" 
+              :grid-template-columns 1
+              :grid-template-rows    1
+              :gap                   "20px"}} 
+     [:div.calendar-year
+      {:style {:flex                  "1"
+               :display               "grid"
+               :grid-template-columns "repeat(4, 1fr)"
+               :grid-template-rows    "repeat(3, 1fr)"
+               :gap                   "10px"}}
+      (for [month (range 1 13)]
+        [month-component current-year month])]
+     
+     
+     ;; display the legend and this months events
+     
+     [:div
+
+      ;; legend
+      
+      [:div
+       {:style {:flex           "0 0 auto"
+                :display        "flex"
+                :min-width      250
+                :padding-top    20
+                :flex-direction "column"}}
+
+       (for [entry event-type-legend]
+         [:div
+          {:style {:flex "0 0 auto"
+                   :gap  "0px"}}
+          [:div {:style {:display     "flex"
+                         :align-items "center"
+                         :margin-top  "5px"
+                         :margin-left "10px"}}
+           [:div
+            {:style {:width            "20px"
+                     :height           "20px"
+                     :background-color (val entry) ;; Circle color from key
+                     :border-radius    "50%"
+                     :margin-right     "10px"}}]
+           [:div
+            (key entry)]]])]
+      
+      ;; this months events
+      [:div
+       {:style {:padding-top 20
+                :text-align "center"}}
+       [:h4 (str (.format (moment) "MMMM") " events")]]
        ]
-      [:div.row]
-      ;; display event-type color legend
-      ;; display this months events
-      ]]))
+      ]
+     
+     
+     
+     ))
 
 (defn format-date [date current-view]
   (case current-view
@@ -100,7 +151,7 @@
     :year (.format date "YYYY")
     :list (.format date "MMMM YYYY")))
 
-(defn calendar-header []                                      ;; calendar header
+(defn calendar-header []                                  ;; calendar header
   (let [current-date @(rf/subscribe [:current-date])
         current-view @(rf/subscribe [:current-view])]
     [:div.calendar-header
