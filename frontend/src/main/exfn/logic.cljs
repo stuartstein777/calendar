@@ -2,7 +2,9 @@
   (:require ["moment" :as moment]))
 
 (defn events-for-month [events month-number]
-  (filter #(= month-number (.month (get % :date))) events))
+  (->> events
+       (filter #(= month-number (.month (get % :date))))
+       (remove #(= "Holiday" (:type %)))))
 
 (def day-of-week-short
   {1 "MON"

@@ -242,11 +242,9 @@ func addEvent(events []Event) []Event {
 			}
 		}
 		event.Id = id + 1
-		fmt.Printf("%d\n", event.Id)
 	}
 
 	events = append(events, event)
-	fmt.Scanln()
 	return events
 }
 

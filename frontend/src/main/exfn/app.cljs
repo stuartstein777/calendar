@@ -12,12 +12,12 @@
 
 (def event-type-legend
   {"poker night"    ["#317a28" :black]
-   "night out"      [:red      :black]
-   "social"         [:yellow   :black]
-   "pool"           [:blue     :white]
+   "night out"      ["#a02c2d" :white]
+   "social"         ["#fed797" :black]
+   "pool"           ["#5e96ae" :white]
    "club"           [:orange   :black]
-   "gig"            [:pink     :black]
-   "climbing"       [:brown    :white]
+   "gig"            ["#d3c0f9" :black]
+   "climbing"       ["#fb8e7e" :white]
    "hike"           [:magenta  :black]})
 
 (defn days-in-month [year month]
@@ -51,6 +51,8 @@
     (get event-type-legend (str/lower-case (first events)))))
 
 ;; on clicking day that has event, show a popup with the event details
+;; if event-type is annual leave, make background of square light green
+;; #C1E1C1
 
 (defn month-component [year month]
   (let [weeks (get-days-in-month year month)
@@ -65,12 +67,16 @@
       {:style {:display "inline"
                :text-align "center"}}
       (str (fmt/unparse (fmt/formatter "MMMM") (time/date-time year month 1)))]
+     
+     ;; display day initials
+
      [:div.day-initials
       {:style {:display        "flex"
                :flex-direction "row"
                :font-weight    "bold"
                :font-size      "0.8em"
                :margin-top     "5px"
+               :margin-bottom  "1px"
                :background     "#f0f0f0"
                :color          "#000000"
                :border-bottom  "1px solid #f3f3f3"}}
@@ -79,6 +85,9 @@
         ^{:key (str "idx-" idx "-DI-" day)}
         [:div {:style {:flex "1"
                        :text-align "center"}} day])]
+     
+     ;; display weeks
+
      (for [week weeks]
        
        ^{:key (str "week-" week "-month-" month)}
@@ -88,37 +97,44 @@
                  :border-left  "1px solid #f3f3f3"
                  :border-right  "1px solid #f3f3f3"
                  :border-bottom  (get-bottom-border week weeks)}}
-        
+
+     ;; display days for each week
+
         (for [[day idx] (map vector week (range 0 (count week)))]
-          ^{:key (str "idx-" idx "day-" day "-month-" month)}
-          [:div.day
-           {:style {:flex "1"
-                    :min-width "40px"
-                    :max-width "40px"
-                    :min-height "25px"
-                    :max-height "25px"
-                    :font-weight "0.8em"
-                    :text-align "center"
-                    :padding "2px"
-                    :position "relative"}}
-           [:div
-            (let [events-for-day 
-                  (if (not= 0 day) (lgc/events-types-on-date events (moment (str year "-" month "-" day))) [])
-                  background-color (first (get-event-color events-for-day))
-                  text-color (second (get-event-color events-for-day))]
-              {:style {:width         "23px"
-                       :height        "23px"
-                       :line-height   "23px"
-                       :display       "inline-block"
-                       :text-align    "center"
-                       :border-radius "50%"
-                       :margin        "0 auto"
-                       :background-color background-color
-                       :color text-color} 
-               })
-            (if (= 0 day)
-              ""
-              day)]])])]))
+          
+          (let [events-for-day
+                (if (not= 0 day) (lgc/events-types-on-date events (moment (str year "-" month "-" day))) [])
+                holiday-day? (some #{"Holiday"} events-for-day)]
+            ^{:key (str "idx-" idx "day-" day "-month-" month)}
+            [:div.day
+             {:style {:flex "1"
+                      :min-width "42px"
+                      :border (if holiday-day? "1px solid green" "0px solid #2e3440")
+                      :background-color (if holiday-day? "#C1E1C1" "#2e3440")
+                      :color (if holiday-day? "#000" "#fff")
+                      :max-width "42px"
+                      :min-height "25px"
+                      :max-height "25px"
+                      :font-weight "0.8em"
+                      :text-align "center"
+                      :position "relative"}}
+             [:div
+              (let [background-color (first (get-event-color events-for-day))
+                    text-color (second (get-event-color events-for-day))]
+                {:style {:width         "25px"
+                         :height        "25px" 
+                         :line-height   "25px"
+                         :display       "inline-block"
+                         :text-align    "center"
+                         :border-radius "50%"
+                         :padding-bottom  "5px"
+                         :margin        "0 auto"
+                         :background-color background-color
+                         :color text-color} 
+                 })
+              (if (= 0 day)
+                ""
+                day)]]))])]))
 
 (defn pad-zero [num]
   (if (< num 10)
