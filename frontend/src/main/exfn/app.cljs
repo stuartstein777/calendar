@@ -34,6 +34,12 @@
           (repeat to-pad-end 0))
          (partition-all 7))))
 
+(comment
+  
+  (get-days-in-month 2024 8)
+
+   
+  )
 (defn get-bottom-border [week weeks]
   (when (= week (last weeks))
     "1px solid #f3f3f3"))
@@ -68,6 +74,7 @@
                :background     "#f0f0f0"
                :color          "#000000"
                :border-bottom  "1px solid #f3f3f3"}}
+
       (for [[day idx] (map vector ["M" "T" "W" "T" "F" "S" "S"] (range 7))]
         ^{:key (str "idx-" idx "-DI-" day)}
         [:div {:style {:flex "1"
@@ -82,7 +89,7 @@
                  :border-right  "1px solid #f3f3f3"
                  :border-bottom  (get-bottom-border week weeks)}}
         
-        (for [[day idx] (map vector week (range 1 (count week)))]
+        (for [[day idx] (map vector week (range 0 (count week)))]
           ^{:key (str "idx-" idx "day-" day "-month-" month)}
           [:div.day
            {:style {:flex "1"
@@ -150,7 +157,7 @@
       [:div
        {:style {:flex           "0 0 auto"
                 :display        "flex"
-                :min-width      250
+                :min-width      200
                 :padding-top    20
                 :flex-direction "column"}}
 
