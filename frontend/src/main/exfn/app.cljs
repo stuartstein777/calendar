@@ -11,14 +11,14 @@
             [clojure.string :as str]))
 
 (def event-type-legend
-  {"Poker Night"    "#317a28"
-   "Night Out"      :red
-   "Social"         :yellow
-   "Pool"           :blue
-   "Club"           :orange
-   "Gig"            :pink
-   "Climbing"       :brown
-   "Hike"           :magenta})
+  {"Poker Night"    ["#317a28" :black]
+   "Night Out"      [:red      :black]
+   "Social"         [:yellow   :black]
+   "Pool"           [:blue     :white]
+   "Club"           [:orange   :black]
+   "Gig"            [:pink     :black]
+   "Climbing"       [:brown    :white]
+   "Hike"           [:magenta  :black]})
 
 (defn days-in-month [year month]
   (let [last-day (time/last-day-of-the-month (time/date-time year month 1))]
@@ -38,8 +38,15 @@
   (when (= week (last weeks))
     "1px solid #f3f3f3"))
 
+(defn get-event-color [events]
+  
+  (if (empty? events)
+    "#2e3440"
+    (get event-type-legend (first events))))
+
 (defn month-component [year month]
-  (let [weeks (get-days-in-month year month)] 
+  (let [weeks (get-days-in-month year month)
+        events @(rf/subscribe [:calendar-events])]
     [:div.calendar-month
      {:style {:display        "flex"
               :flex-direction "column"
@@ -78,10 +85,26 @@
                     :max-height "25px"
                     :font-weight "0.8em"
                     :text-align "center"
-                    :padding "2px"}}
-           (if (= 0 day)
-                ""
-             day)])])]))
+                    :padding "2px"
+                    :position "relative"}}
+           [:div
+            (let [events-for-day 
+                  (if (not= 0 day) (lgc/events-types-on-date events (moment (str year "-" month "-" day))) [])
+                  background-color (first (get-event-color events-for-day))
+                  text-color (second (get-event-color events-for-day))]
+              {:style {:width         "23px"
+                       :height        "23px"
+                       :line-height   "23px"
+                       :display       "inline-block"
+                       :text-align    "center"
+                       :border-radius "50%"
+                       :margin        "0 auto"
+                       :background-color background-color
+                       :color text-color} 
+               })
+            (if (= 0 day)
+              ""
+              day)]])])]))
 
 (defn pad-zero [num]
   (if (< num 10)
@@ -110,7 +133,6 @@
       (for [month (range 1 13)]
         [month-component current-year month])]
      
-     
      ;; display the legend and this months events
      
      [:div
@@ -135,7 +157,7 @@
            [:div
             {:style {:width            "20px"
                      :height           "20px"
-                     :background-color (val entry) ;; Circle color from key
+                     :background-color (first (val entry)) ;; Circle color from key
                      :border-radius    "50%"
                      :margin-right     "10px"}}]
            [:div
