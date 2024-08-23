@@ -4,6 +4,7 @@
             [re-frame.core :as rf]
             [exfn.subscriptions]
             [exfn.events]
+            [exfn.logic :as lgc]
             [cljs-time.core :as time]
             [cljs-time.format :as fmt]
             ["moment" :as moment]
@@ -82,8 +83,15 @@
                 ""
              day)])])]))
 
+(defn pad-zero [num]
+  (if (< num 10)
+    (str "0" num)
+    (str num)))
+
 (defn display-year []
   (let [current-date @(rf/subscribe [:current-date])
+        events @(rf/subscribe [:calendar-events])
+        curent-month-events (lgc/events-for-month events (.month current-date))
         current-year (js/Number (.format current-date "YYYY"))]
     
     ;; display the calendar month grids
@@ -136,14 +144,24 @@
       ;; this months events
       [:div
        {:style {:padding-top 20
-                :text-align "center"}}
-       [:h4 (str (.format (moment) "MMMM") " events")]]
-       ]
-      ]
-     
-     
-     
-     ))
+                :text-align "center"
+                :display        "flex"
+                :flex-direction "column"}}
+       [:h4 (str (.format (moment) "MMMM") " events")]
+      (for [event curent-month-events]
+        [:div
+         {:style {:display "flex"
+                  :flex "0 0 auto"
+                  :gap  "1px"
+                  :padding "5px 0"}}
+         [:div 
+          {:style {:flex "0 0 auto"}}
+          (str (lgc/day-of-week-short (.day (:date event))) " " (pad-zero (.format (:date event) "D")))]
+         [:div 
+          {:style {:flex "0 0 auto"
+                   :margin-left "10px"}}
+          (:name event)]]
+        )]]]))
 
 (defn format-date [date current-view]
   (case current-view

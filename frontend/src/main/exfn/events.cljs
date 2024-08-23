@@ -7,11 +7,20 @@
             ["moment" :as moment]
             [day8.re-frame.http-fx]))
 
+(defn parse-event [event]
+  {:id (get event :Id)
+   :name (get event :Name)
+   :description (get event :Description)
+   :type (get event :Type)
+   :location (get event :Location)
+   :date (moment (get event :Date))})
+
 (rf/reg-event-db
   :process-events
   (fn [db [_ events]]
-    (-> db
-        (assoc :calendar-events events))))
+    (let [processed-events (map parse-event events)]
+      (-> db
+          (assoc :calendar-events processed-events)))))
 
 (rf/reg-event-fx
  :initialize
