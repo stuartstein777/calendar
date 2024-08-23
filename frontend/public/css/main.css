@@ -102,3 +102,126 @@ h1 {
     padding-right: 30px;
 }
 
+.day-initials {
+    display: flex;
+    font-weight: bold;
+    font: 0.8em;
+    margin-top: 5px;
+    margin-bottom: 1px;
+    background: #f0f0f0;
+    color: #000000;
+    border-bottom: 1px solid #f3f3f3;
+}
+
+.calendar-month {
+    display: flex;
+    flex-direction: column;
+    padding-left: 10px;
+    padding-top: 20px;
+    width: fit-content;
+}
+
+.month-title  {
+    display: inline;
+    text-align: center;
+}
+
+.week {
+    display: flex;
+    flex-direction: row;
+    border-left: 1px solid #f3f3f3;
+    border-right: 1px solid #f3f3f3;
+}
+
+.initial-day {
+    flex: 1;
+    text-align: center;
+}
+
+.daybox {
+    flex: 1;
+    min-width: 42px;
+    max-width: 42px;
+    min-height: 25px;
+    max-height: 25px;
+    font-weight: 0.8em;
+    text-align: center;
+    position: relative;
+}
+
+.day {
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    display: inline-block;
+    text-align: center;
+    border-radius: 50%;
+    padding-bottom: 5px;
+    margin: 0 auto;
+}
+
+.calendar-grid {
+    display: flex;
+    grid-template-columns:  1;
+    grid-template-rows:  1;
+    gap:  20px;;
+}
+
+.calendar-year {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.legend {
+    flex: 0 0 auto;
+    display: flex;
+    min-width: 200px;
+    padding-top: 20px;
+    flex-direction: column;
+}
+
+.legend-entry {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    margin-left: 10px;
+}
+
+.legend-key {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px
+
+}
+
+.current-months-events {
+    padding-top: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+.current-months-events-entry {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 1px;
+    padding: 5px 0;
+}
+
+.current-months-events-entry-date {
+    flex: 0 0 auto;
+}
+
+.current-months-events-entry-name {
+    flex: 0 0 auto;
+    margin-left: 10px;
+}
+
+.calendar-selectors {
+    float: right;
+    padding-right: 50px;
+}
+
