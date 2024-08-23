@@ -63,3 +63,8 @@
  (fn [db [_ view]]
    (assoc db :current-view view)))
 
+(rf/reg-event-db
+ :set-selected-date
+ (fn [db [_ date]]
+   (assoc db :selected-date date)))
+

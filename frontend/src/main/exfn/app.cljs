@@ -15,10 +15,14 @@
    "night out"      ["#a02c2d" :white]
    "social"         ["#fed797" :black]
    "pool"           ["#5e96ae" :white]
-   "club"           [:orange   :black]
    "gig"            ["#d3c0f9" :black]
    "climbing"       ["#fb8e7e" :black]
-   "hike"           [:magenta  :black]})
+   "hike"           [:magenta  :black]
+   "multiple"       ["#f3a4ed" :black]})
+
+(defn day-detail [date]
+  
+  )
 
 (defn days-in-month [year month]
   (let [last-day (time/last-day-of-the-month (time/date-time year month 1))]
@@ -39,14 +43,12 @@
     "1px solid #f3f3f3"))
 
 (defn get-event-color [events]
-  
-  (if (empty? events)
-    "#2e3440"
-    (get event-type-legend (str/lower-case (first events)))))
+  (condp = (count events)
+    0 "#2e3440"
+    1 (get event-type-legend (str/lower-case (first events)))
+    (get event-type-legend "multiple")))
 
 ;; on clicking day that has event, show a popup with the event details
-;; if event-type is annual leave, make background of square light green
-;; #C1E1C1
 
 (defn month-component [year month]
   (let [weeks (get-days-in-month year month)
@@ -82,19 +84,18 @@
              {:style {:border (if holiday-day? "1px solid green" "0px solid #2e3440")
                       :background-color (if holiday-day? "#C1E1C1" "#2e3440")
                       :color (if holiday-day? "#000" "#fff")}}
-             [:div.day
+             ;; display day number and circle if it has event
+             [:div.day 
               (let [background-color (first (get-event-color events-for-day))
                     text-color (second (get-event-color events-for-day))]
                 {:style {:background-color background-color
-                         :color text-color}})
+                         :color text-color}
+                 :on-click (fn [_]
+                             (let [moment (moment (lgc/build-date day month year))]
+                               (rf/dispatch [:set-selected-date moment])))})
               (if (= 0 day)
                 ""
                 day)]]))])]))
-
-(defn pad-zero [num]
-  (if (< num 10)
-    (str "0" num)
-    (str num)))
 
 (defn display-year []
   (let [current-date @(rf/subscribe [:current-date])
@@ -132,7 +133,7 @@
         [:div.current-months-events-entry 
          [:div.current-months-events-entry-date
           (str (lgc/day-of-week-short (.day (:date event))) " "
-               (pad-zero (.format (:date event) "D")))]
+               (lgc/pad-zero (.format (:date event) "D")))]
          [:div.current-months-events-entry-name 
           (:name event)]])]]]))
 

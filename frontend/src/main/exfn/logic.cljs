@@ -21,6 +21,13 @@
                     (mapv :type))]
     result))
 
+(defn pad-zero [num]
+  (if (< num 10)
+    (str "0" num)
+    (str num)))
+
+(defn build-date [day month year]
+  (str year "-" month "-" (pad-zero day)))
 
 (comment
   (let [date (moment "2024-08-01")
