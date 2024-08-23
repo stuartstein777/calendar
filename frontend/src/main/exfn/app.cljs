@@ -17,7 +17,7 @@
    "pool"           ["#5e96ae" :white]
    "club"           [:orange   :black]
    "gig"            ["#d3c0f9" :black]
-   "climbing"       ["#fb8e7e" :white]
+   "climbing"       ["#fb8e7e" :black]
    "hike"           [:magenta  :black]})
 
 (defn days-in-month [year month]
