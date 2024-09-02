@@ -21,3 +21,8 @@
  (fn [db _]
    (-> db :calendar-events)))
 
+(rf/reg-sub
+ :selected-date
+ (fn [db _]
+   (get-in db [:selected-date])))
+

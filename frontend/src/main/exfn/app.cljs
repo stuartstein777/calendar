@@ -20,9 +20,33 @@
    "hike"           [:magenta  :black]
    "multiple"       ["#f3a4ed" :black]})
 
-(defn day-detail [date]
-  
-  )
+(defn day-detail []
+  (let [selected-date @(rf/subscribe [:selected-date])
+        events        @(rf/subscribe [:calendar-events])]
+    [:div
+     [:table.table.table-sm.table-responsive
+      [:thead.thead-dark
+       [:tr
+        [:th.la "Day"]
+        [:th.la "Name"]
+        [:th.la "Type"]
+        [:th.la "Location"]
+        [:th.la "Description"]]]
+      [:tbody
+       (for [event (lgc/events-for-day events selected-date)]
+         (do (prn event)
+             [:tr
+              [:td.la
+               (str (lgc/day-of-week-short (.day (:date event))) " " (lgc/pad-zero (.format selected-date "D")))]
+              [:td.la (:name event)]
+              [:td.la (:type event)]
+              [:td.la (:location event)]
+              [:td.la (:description event)]]))]]
+     [:btn.btn.btn-primary
+      {:style {:float :left
+               :margin-left 30}
+       :on-click #(rf/dispatch [:update-view :year])}
+      "Back"]]))
 
 (defn days-in-month [year month]
   (let [last-day (time/last-day-of-the-month (time/date-time year month 1))]
@@ -92,7 +116,8 @@
                          :color text-color}
                  :on-click (fn [_]
                              (let [moment (moment (lgc/build-date day month year))]
-                               (rf/dispatch [:set-selected-date moment])))})
+                               (rf/dispatch [:set-selected-date moment])
+                               (rf/dispatch [:update-view :day])))})
               (if (= 0 day)
                 ""
                 day)]]))])]))
@@ -101,47 +126,63 @@
   (let [current-date @(rf/subscribe [:current-date])
         events @(rf/subscribe [:calendar-events])
         curent-month-events (lgc/events-for-month events (.month current-date))
-        current-year (js/Number (.format current-date "YYYY"))]
+        current-year (js/Number (.format current-date "YYYY"))
+        working-days-remaining (lgc/working-days-remaining events current-year)]
     
     ;; display the calendar month grids
-    
-    [:div.calendar-grid 
-     [:div.calendar-year
-      (for [month (range 1 13)]
-        ^{:key (str "month-" month)}
-        [month-component current-year month])]
-     
-     ;; display the legend and this months events
-     
-     [:div      ;; legend
-      [:div.legend
-       
-       (for [entry event-type-legend]
-         ^{:key (key entry)}
-         [:div
-          [:div.legend-entry 
-           [:div.legend-key
-            {:style {:background-color (first (val entry))}}]
-           [:div
-            (str/capitalize (key entry))]]])]
+    [:div
+     [:div.calendar-grid 
+      [:div.calendar-year
+       (for [month (range 1 13)]
+         ^{:key (str "month-" month)}
+         [month-component current-year month])]
       
+     ;; display the legend and this months events
+      
+      [:div      ;; legend
+       [:div.legend
+        
+        (for [entry event-type-legend]
+          ^{:key (key entry)}
+          [:div
+           [:div.legend-entry 
+            [:div.legend-key
+             {:style {:background-color (first (val entry))}}]
+            [:div
+             (str/capitalize (key entry))]]])]
+       
       ;; this months events
-      [:div.current-months-events 
-       [:h4 (str (.format (moment) "MMMM") " events")]
-      (for [event curent-month-events]
-        ^{:key (:id event)}
-        [:div.current-months-events-entry 
-         [:div.current-months-events-entry-date
-          (str (lgc/day-of-week-short (.day (:date event))) " "
-               (lgc/pad-zero (.format (:date event) "D")))]
-         [:div.current-months-events-entry-name 
-          (:name event)]])]]]))
+       
+       [:div.current-months-events 
+        [:h4 (str (.format (moment) "MMMM") " events")]
+        (for [event curent-month-events]
+          ^{:key (:id event)}
+          [:div.current-months-events-entry 
+           [:div.current-months-events-entry-date
+            (str (lgc/day-of-week-short (.day (:date event))) " "
+                 (lgc/pad-zero (.format (:date event) "D")))]
+           [:div.current-months-events-entry-name 
+            (:name event)]])]]]
+            
+            [:div
+             {:style {:text-align :left
+                      :padding-left 10
+                      :padding-top 30}}
+             [:h4
+              
+              (str "Working days remaining: " working-days-remaining)]]]))
 
 (defn format-date [date current-view]
   (case current-view
     :month (.format date "MMMM YYYY")
     :year (.format date "YYYY")
-    :list (.format date "MMMM YYYY")))
+    :list (.format date "MMMM YYYY")
+    :day  (.format date "DD MMMM YYYY")))
+
+(defn get-chevron-visibilty [current-view]
+  (case current-view 
+    :day   :none
+    :inline))
 
 (defn calendar-header []                                  ;; calendar header
   (let [current-date @(rf/subscribe [:current-date])
@@ -149,6 +190,7 @@
     [:div.calendar-header
      
      [:span.chevron-left                                   ;; left chevron <
+      {:style {:display (get-chevron-visibilty current-view)}}
       [:i.fas.fa-chevron-left.ptr
        {:on-click 
         (fn []
@@ -160,6 +202,7 @@
       (str (format-date current-date current-view))]
      
      [:span.chevron-right                                  ;; right chevron >
+      {:style {:display (get-chevron-visibilty current-view)}}
       [:i.fas.fa-chevron-right.ptr
         {:on-click 
          (fn []
@@ -181,9 +224,10 @@
      {:style {:text-align :center}}
      [calendar-header]
      [:hr]
-     (if (= :year current-view)
-       [display-year]
-       [:div])]))
+     (cond 
+       (= :year current-view)  [display-year]
+       (= :day current-view)   [day-detail]
+       :else [:div])]))
 
 (defn ^:dev/after-load start []
   (dom/render [app]
