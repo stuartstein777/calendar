@@ -18,6 +18,7 @@
 (rf/reg-event-db
   :process-events
   (fn [db [_ events]]
+    (prn events)
     (let [processed-events (map parse-event events)]
       (-> db
           (assoc :calendar-events processed-events)))))

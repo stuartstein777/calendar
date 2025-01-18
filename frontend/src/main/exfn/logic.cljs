@@ -1,9 +1,9 @@
 (ns exfn.logic
   (:require ["moment" :as moment]))
 
-(defn events-for-month [events month-number]
+(defn events-for-month [events month-number year]
   (->> events
-       (filter #(= month-number (.month (get % :date))))
+       (filter #(and (= month-number (.month (get % :date))) (= year (.year (get % :date)))))
        (remove #(= "Holiday" (:type %)))))
 
 (defn events-for-day [events day]
@@ -42,24 +42,32 @@
     (->> (range (inc total-days-remaining))
          (map #(moment (str (-> (.clone now) (.add % "days")))))
          (filter (fn [d] 
-                   (debug "day" d)
                    (or (= 0 (.day d)) (= 6 (.day d)))))
          count)))
 
+(defn holidays-for-selected-year [events start-date end-of-year]
+  (->> events
+       (filter #(= "Holiday" (:type %)))
+       (map :date)
+       (map #(moment %))
+       (filter #(and (<= start-date %) (<= % end-of-year)))
+       count))
+
 (defn working-days-remaining [events selected-year]
   (let [end-of-year (moment (str selected-year "-12-31"))
-        days-remaining (+ 2 (.diff end-of-year (.utc (moment)) "days"))
-        holidays (->> events
-                     (filter #(= "Holiday" (:type %)))
-                     (map :date)
-                     (map #(moment %))
-                     (filter #(and (<= (.utc (moment)) %) (<= % end-of-year)))
-                     count)
-        weekends (weekends-between-now-and-eoy (.utc (moment)) end-of-year)
-        ]
-    (- days-remaining weekends holidays)))
+        current-year (.year (moment))
+        start-date (if (= current-year selected-year)
+                     (.utc (moment))
+                     (moment (str selected-year "-01-01")))
+        days-remaining-this-year (+ 2 (.diff end-of-year start-date "days"))
+        weekends (weekends-between-now-and-eoy start-date end-of-year)
+        holidays-for-selected-year (holidays-for-selected-year events start-date end-of-year)]
+    (if (< selected-year current-year)
+      0
+      (- days-remaining-this-year weekends holidays-for-selected-year))))
 
 (comment
   
+  ;; todo - when viewing a specific day, show the day in the date field, not the current day
 )
   

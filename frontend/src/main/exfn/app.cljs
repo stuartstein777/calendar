@@ -11,14 +11,16 @@
             [clojure.string :as str]))
 
 (def event-type-legend
-  {"poker night"    ["#317a28" :black]
-   "night out"      ["#a02c2d" :white]
-   "social"         ["#fed797" :black]
-   "pool"           ["#5e96ae" :white]
-   "gig"            ["#d3c0f9" :black]
-   "climbing"       ["#fb8e7e" :black]
-   "hike"           [:magenta  :black]
-   "multiple"       ["#f3a4ed" :black]})
+  {"poker night"    ["#317a28" :black nil]
+   "night out"      ["#a02c2d" :white nil]
+   "social"         ["#fed797" :black nil]
+   "pool"           ["#5e96ae" :white nil]
+   "gig"            ["#d3c0f9" :black nil]
+   "climbing"       ["#fb8e7e" :black nil]
+   "hike"           [:magenta  :black nil]
+   "dentist"        ["#2e3440" :white "#fc9403"]
+   "work event"     [:red  :black nil]
+   "multiple"       ["#f3a4ed" :black nil]})
 
 (defn day-detail []
   (let [selected-date @(rf/subscribe [:selected-date])
@@ -34,14 +36,13 @@
         [:th.la "Description"]]]
       [:tbody
        (for [event (lgc/events-for-day events selected-date)]
-         (do (prn event)
-             [:tr
-              [:td.la
-               (str (lgc/day-of-week-short (.day (:date event))) " " (lgc/pad-zero (.format selected-date "D")))]
-              [:td.la (:name event)]
-              [:td.la (:type event)]
-              [:td.la (:location event)]
-              [:td.la (:description event)]]))]]
+         [:tr
+          [:td.la
+           (str (lgc/day-of-week-short (.day (:date event))) " " (lgc/pad-zero (.format selected-date "D")))]
+          [:td.la (:name event)]
+          [:td.la (:type event)]
+          [:td.la (:location event)]
+          [:td.la (:description event)]])]]
      [:btn.btn.btn-primary
       {:style {:float :left
                :margin-left 30}
@@ -108,12 +109,15 @@
              {:style {:border (if holiday-day? "1px solid green" "0px solid #2e3440")
                       :background-color (if holiday-day? "#C1E1C1" "#2e3440")
                       :color (if holiday-day? "#000" "#fff")}}
+
              ;; display day number and circle if it has event
-             [:div.day 
+             [:div.day
               (let [background-color (first (get-event-color events-for-day))
-                    text-color (second (get-event-color events-for-day))]
+                    text-color (second (get-event-color events-for-day))
+                    border-color (nth (get-event-color events-for-day) 2)]
                 {:style {:background-color background-color
-                         :color text-color}
+                         :color text-color
+                         :border (if border-color (str "2px solid " border-color ) "none")}
                  :on-click (fn [_]
                              (let [moment (moment (lgc/build-date day month year))]
                                (rf/dispatch [:set-selected-date moment])
@@ -125,7 +129,7 @@
 (defn display-year []
   (let [current-date @(rf/subscribe [:current-date])
         events @(rf/subscribe [:calendar-events])
-        curent-month-events (lgc/events-for-month events (.month current-date))
+        curent-month-events (lgc/events-for-month events (.month current-date) (.year current-date))
         current-year (js/Number (.format current-date "YYYY"))
         working-days-remaining (lgc/working-days-remaining events current-year)]
     
@@ -147,7 +151,8 @@
           [:div
            [:div.legend-entry 
             [:div.legend-key
-             {:style {:background-color (first (val entry))}}]
+             {:style {:background-color (first (val entry))
+                      :border (if (nth (val entry) 2) (str "2px solid " (nth (val entry) 2)) "none")}}]
             [:div
              (str/capitalize (key entry))]]])]
        
@@ -186,7 +191,8 @@
 
 (defn calendar-header []                                  ;; calendar header
   (let [current-date @(rf/subscribe [:current-date])
-        current-view @(rf/subscribe [:current-view])]
+        current-view @(rf/subscribe [:current-view])
+        selected-date @(rf/subscribe [:selected-date])]
     [:div.calendar-header
      
      [:span.chevron-left                                   ;; left chevron <
@@ -199,7 +205,9 @@
             (rf/dispatch-sync [:prev-month])))}]]
      
      [:span.calendar-header-month                          ;; month
-      (str (format-date current-date current-view))]
+      (if selected-date
+        (str (format-date selected-date current-view))
+        (str (format-date current-date current-view)))]
      
      [:span.chevron-right                                  ;; right chevron >
       {:style {:display (get-chevron-visibilty current-view)}}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"time"
 )
 
 type Event struct {
@@ -108,14 +109,14 @@ func editEvent(events []Event) []Event {
 	for {
 		fmt.Print("\033[H\033[2J")
 		fmt.Print("Month ?")
-
+		year, _, _ := time.Now().Date()
 		var month int
 		fmt.Scanln(&month)
 
 		if month >= 0 && month <= 12 {
-			filteredEvents := filterEvents(events, month)
+			filteredEvents := filterEvents(events, month, year)
 			printEvents(filteredEvents)
-			fmt.Printf("Id of the event to delete: ")
+			fmt.Printf("Id of the event to edit: ")
 			var id int
 			fmt.Scanln(&id)
 			eventToEdit := findEvent(filteredEvents, id)
@@ -174,14 +175,14 @@ func deleteEvent(events []Event) []Event {
 
 		var month int
 		fmt.Scanln(&month)
-
+		year, _, _ := time.Now().Date()
 		filteredEvents := events
 
 		if month >= 0 && month <= 12 {
 			if month == 0 {
 				filteredEvents = events
 			} else {
-				filteredEvents = filterEvents(events, month)
+				filteredEvents = filterEvents(events, month, year)
 
 				printEvents(filteredEvents)
 
@@ -248,10 +249,10 @@ func addEvent(events []Event) []Event {
 	return events
 }
 
-func filterEvents(events []Event, month int) []Event {
+func filterEvents(events []Event, month int, year int) []Event {
 	filteredEvents := []Event{}
 	for _, event := range events {
-		if event.Date[5:7] == fmt.Sprintf("%02d", month) {
+		if event.Date[5:7] == fmt.Sprintf("%02d", month) && event.Date[0:4] == fmt.Sprintf("%02d", year) {
 			filteredEvents = append(filteredEvents, event)
 		}
 	}
@@ -267,6 +268,7 @@ func viewEvents(events []Event) {
 		fmt.Print("Month ? ")
 		var month int
 		fmt.Scanln(&month)
+		year, _, _ := time.Now().Date()
 
 		filteredEvents := events
 
@@ -274,7 +276,7 @@ func viewEvents(events []Event) {
 			if month == 0 {
 				filteredEvents = events
 			} else {
-				filteredEvents = filterEvents(events, month)
+				filteredEvents = filterEvents(events, month, year)
 			}
 		} else {
 			fmt.Println("Invalid month")
