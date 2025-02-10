@@ -98,17 +98,27 @@
         {:style {:border-bottom  (get-bottom-border week weeks)}}
 
      ;; display days for each week
-
         (for [[day idx] (map vector week (range 0 (count week)))]
 
           (let [events-for-day
                 (if (not= 0 day) (lgc/events-types-on-date events (moment (str year "-" month "-" day))) [])
-                holiday-day? (some #{"Holiday"} events-for-day)]
+                holiday-day? (some #{"Holiday"} events-for-day)
+                today? (and (= day (.date (moment)))
+                            (= (dec month) (.month (moment)))
+                            (= year (.year (moment))))]
             ^{:key (str "idx-" idx "day-" day "-month-" month)}
             [:div.daybox
-             {:style {:border (if holiday-day? "1px solid green" "0px solid #2e3440")
-                      :background-color (if holiday-day? "#C1E1C1" "#2e3440")
-                      :color (if holiday-day? "#000" "#fff")}}
+             {:style {:border (cond holiday-day? "1px solid green" 
+                                    today? "1px solid #00f"
+                                    :else "0px solid #2e3440")
+                      :background-color (cond
+                                          holiday-day? "#C1E1C1"
+                                          today? "#97aff0"
+                                          :else "#2e3440")
+                      :color (cond
+                               holiday-day? "#000"
+                               today? "#00f"
+                               :else "#fff")}}
 
              ;; display day number and circle if it has event
              [:div.day
@@ -117,7 +127,7 @@
                     border-color (nth (get-event-color events-for-day) 2)]
                 {:style {:background-color background-color
                          :color text-color
-                         :border (if border-color (str "2px solid " border-color ) "none")}
+                         :border (if border-color (str "2px solid " border-color) "none")}
                  :on-click (fn [_]
                              (let [moment (moment (lgc/build-date day month year))]
                                (rf/dispatch [:set-selected-date moment])
@@ -160,14 +170,21 @@
        
        [:div.current-months-events 
         [:h4 (str (.format (moment) "MMMM") " events")]
-        (for [event curent-month-events]
-          ^{:key (:id event)}
-          [:div.current-months-events-entry 
-           [:div.current-months-events-entry-date
-            (str (lgc/day-of-week-short (.day (:date event))) " "
-                 (lgc/pad-zero (.format (:date event) "D")))]
-           [:div.current-months-events-entry-name 
-            (:name event)]])]]]
+        (for [event (->> curent-month-events
+                        (sort-by #(.date (:date %))))]
+          ;; if past, strikethrough
+          (let [today (moment)
+                event-date (moment (lgc/build-date (.date (:date event))
+                                                   (inc (.month (:date event)))
+                                                   (.year (:date event))))]
+            ^{:key (:id event)}
+            [:div.current-months-events-entry 
+             [:div.current-months-events-entry-date
+              (str (lgc/day-of-week-short (.day (:date event))) " "
+                   (lgc/pad-zero (.format (:date event) "D")))]
+             [:div.current-months-events-entry-name 
+              {:style {:text-decoration (if (.isBefore event-date today) "line-through" "none")}}
+              [:span (:name event)]]]))]]]
             
             [:div
              {:style {:text-align :left
